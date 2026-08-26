@@ -55,6 +55,9 @@ if __name__ == "__main__":
     except (ValueError, FileNotFoundError, RuntimeError) as exc:
         print(f"오류: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
+    except Exception as exc:
+        print(f"예기치 못한 오류 ({type(exc).__name__}): {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
     except KeyboardInterrupt:
         print("\n중단됨.", file=sys.stderr)
         raise SystemExit(130)
