@@ -4,10 +4,12 @@
 
 ## 동작 방식
 
-1. Instaloader로 `nlsomhansig` 최신 게시물 확인
+1. Instaloader 세션으로 `nlsomhansig` 최신 게시물 확인
+   - 웹 REST 피드(`/api/v1/feed/user/<username>/username/`)를 먼저 쓰고, 실패하면 Instaloader GraphQL로 재시도
+   - GraphQL 게시물 쿼리는 2026-10부터 `feedback_required`로 막혀 있음
 2. 오늘(KST) 올라온 게시물만 이미지 다운로드
 3. Slack `files.upload_v2`로 채널에 업로드
-4. GitHub Actions가 평일 10:00(KST)에 실행
+4. 이 서버의 crontab이 평일 09:45(KST)에 실행 (GitHub Actions는 쓰지 않음)
 
 ## 사전 설정
 
@@ -34,12 +36,6 @@ instaloader --login=보조계정명 --sessionfile=session
 
 성공하면 프로젝트 루트에 `session` 파일이 생성됩니다.
 
-GitHub Actions용 base64 인코딩:
-
-```bash
-base64 -i session | pbcopy
-```
-
 ### 3. 로컬 환경변수
 
 `.env.example`을 복사해 `.env`를 만듭니다.
@@ -57,17 +53,6 @@ INSTAGRAM_USERNAME=보조계정명
 TARGET_PROFILE=nlsomhansig
 ```
 
-### 4. GitHub Secrets
-
-Repository → Settings → Secrets and variables → Actions:
-
-| Secret | 값 |
-|--------|-----|
-| `SLACK_BOT_TOKEN` | Slack Bot Token |
-| `SLACK_CHANNEL_ID` | `#점심메뉴` 채널 ID |
-| `INSTAGRAM_USERNAME` | 보조 인스타 계정명 |
-| `INSTAGRAM_SESSION_B64` | `session` 파일 base64 인코딩 값 |
-
 ## 로컬 실행
 
 ```bash
@@ -77,20 +62,18 @@ cp .env.example .env
 python main.py
 ```
 
-## GitHub Actions 수동 테스트
-
-Actions 탭 → **Lunch Menu Bot** → **Run workflow**
-
 ## 스케줄
 
-| KST | UTC cron | 설명 |
-|-----|----------|------|
-| 09:45 | `45 0 * * 1-5` | 평일 오전 실행 |
+서버(KST)의 crontab으로 평일 09:45에 실행하고, 출력은 `cron.log`에 쌓입니다.
 
-`state.json`으로 같은 게시물 중복 전송을 방지합니다.
+```cron
+45 9 * * 1-5 cd /home/mvldev/sanghoon/nlsomhansig && /home/mvldev/sanghoon/nlsomhansig/venv/bin/python main.py >> /home/mvldev/sanghoon/nlsomhansig/cron.log 2>&1
+```
+
+`state.json`으로 같은 게시물 중복 전송을 방지합니다. 같은 날 수동 실행 후 cron이 다시 돌아도 이미 보낸 게시물은 건너뜁니다.
 
 ## 주의사항
 
 - `session`, `.env`, `state.json`, `downloads/`는 git에 올리지 마세요.
-- 인스타 세션이 만료되면 로컬에서 `instaloader --login`으로 재생성 후 GitHub Secret을 업데이트하세요.
+- 인스타 세션이 만료되면 서버에서 `venv/bin/instaloader --login=보조계정명 --sessionfile=session`으로 재생성하세요.
 - Slack에서 `not_in_channel` 오류가 나면 봇이 채널에 초대되지 않은 상태입니다.
