@@ -223,3 +223,8 @@ session
 downloads/
 state.json
 cron.log
+
+# lunch-menu-bot
+state/
+logs/
+venv/
