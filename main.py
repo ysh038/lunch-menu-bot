@@ -1,11 +1,11 @@
 """식권 식당들의 네이버 플레이스 '소식'에서 오늘 메뉴를 찾아 Slack #점심메뉴에 올린다.
 
-    venv/bin/python main.py            # 평일 09:00~10:45 cron, 15분마다
-    venv/bin/python main.py --final    # 11:00 마지막 확인. 메뉴를 못 찾은 식당이 있으면 알림 1회
+    venv/bin/python main.py            # 평일 09:00~11:45 cron, 15분마다
+    venv/bin/python main.py --final    # 12:00 마지막 확인. 메뉴를 못 찾은 식당이 있으면 알림 1회
     DRY_RUN=1 venv/bin/python main.py --date 2026-11-03   # Slack 없이 특정 날짜로 시험
 
 이미 올린 소식은 feedId로 건너뛰고, 같은 날 새로 올라온 메뉴 소식은 계속 올린다.
-첫 소식이 메뉴가 아닐 수 있어서 11:00까지 매번 확인한다.
+첫 소식이 메뉴가 아닐 수 있고 하늘한정식뷔페는 11시 넘어 올릴 때도 있어서 12:00까지 매번 확인한다.
 """
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ def run(day: date, final: bool) -> int:
                         lines.append(f"• {name}: 오늘 소식은 있지만 메뉴로 판단되지 않음 ({slack_escape(titles)})")
                     else:
                         lines.append(f"• {name}: 오늘 올라온 소식 없음")
-                slack.post("⚠️ 11:00까지 오늘 메뉴를 찾지 못한 식당이 있습니다\n" + "\n".join(lines))
+                slack.post("⚠️ 12:00까지 오늘 메뉴를 찾지 못한 식당이 있습니다\n" + "\n".join(lines))
                 state.alerted = True
                 log("미발견 알림 전송: " + ", ".join(name for name, _ in missing))
     return 0

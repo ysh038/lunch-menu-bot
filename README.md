@@ -11,17 +11,17 @@
 
 ## 동작 방식
 
-1. 평일 09:00~11:00, 15분마다 두 식당의 소식 페이지(`pcmap.place.naver.com/restaurant/<ID>/feed`)를 읽는다.
+1. 평일 09:00~12:00, 15분마다 두 식당의 소식 페이지(`pcmap.place.naver.com/restaurant/<ID>/feed`)를 읽는다.
    - 공식 API가 없어서 페이지에 내장된 `__APOLLO_STATE__` JSON을 읽는다. 로그인·쿠키가 필요 없다.
 2. 오늘 날짜로 올라온 소식을 분류한다.
    - **메뉴**: 제목에 "메뉴"가 있고 이미지가 있음 → 이미지(긴 변 2048px로 축소)를 Slack에 업로드
    - **휴무**: 제목·본문에 "쉽니다", "휴무" 등이 있음 → 텍스트로 알림
    - 그 밖의 소식은 건너뛴다.
 3. 이미 올린 소식(feedId)과 같은 이미지(URL)는 다시 올리지 않는다. 식당이 같은 글을 두 번 올리는 경우가 있다.
-4. 첫 소식이 메뉴가 아닐 수 있어서, 메뉴를 올린 뒤에도 11:00까지 계속 확인한다.
-5. 11:00 마지막 확인(`--final`)에서 메뉴도 휴무 글도 못 찾은 식당이 있으면 사유와 함께 알림을 한 번 보낸다.
+4. 첫 소식이 메뉴가 아닐 수 있어서, 메뉴를 올린 뒤에도 12:00까지 계속 확인한다. 하늘한정식뷔페는 11시 넘어 올리는 날도 있다.
+5. 12:00 마지막 확인(`--final`)에서 메뉴도 휴무 글도 못 찾은 식당이 있으면 사유와 함께 알림을 한 번 보낸다.
 
-주말, 한국 공휴일(대체공휴일 포함)은 확인하지 않는다. 회사 휴무일 등은 `holidays_override.txt`에 `2026-12-24 off`처럼 적는다.
+토·일요일과 한국 공휴일(대체공휴일 포함)은 확인하지 않는다. 회사 휴무일 등은 `holidays_override.txt`에 `2026-12-24 off`처럼 적는다.
 
 ## 설정
 
@@ -47,15 +47,15 @@ venv/bin/python workday.py 2026-12-25                # 근무일 판단 확인
 ## 스케줄 (서버 crontab, KST)
 
 ```cron
-*/15 9-10 * * 1-5 cd /home/mvldev/sanghoon/lunch-menu-bot && venv/bin/python main.py >> logs/cron.log 2>&1
-0 11 * * 1-5 cd /home/mvldev/sanghoon/lunch-menu-bot && venv/bin/python main.py --final >> logs/cron.log 2>&1
+*/15 9-11 * * 1-5 cd /home/mvldev/sanghoon/lunch-menu-bot && venv/bin/python main.py >> logs/cron.log 2>&1
+0 12 * * 1-5 cd /home/mvldev/sanghoon/lunch-menu-bot && venv/bin/python main.py --final >> logs/cron.log 2>&1
 ```
 
 ## 파일
 
 | 파일 | 역할 |
 |---|---|
-| `main.py` | 식당 목록, 소식 분류, 게시, 11:00 미발견 알림 |
+| `main.py` | 식당 목록, 소식 분류, 게시, 12:00 미발견 알림 |
 | `naver_place.py` | 네이버 플레이스 소식 조회·파싱, 이미지 다운로드 |
 | `slack_client.py` | Slack 업로드·메시지 |
 | `state.py` | 하루 단위 게시 기록 `state/<날짜>.json` (파일 잠금으로 중복 게시 방지) |
@@ -66,8 +66,8 @@ venv/bin/python workday.py 2026-12-25                # 근무일 판단 확인
 
 ## 주의
 
-- 네이버 페이지 구조가 바뀌면 `naver_place.parse_feeds()`를 고쳐야 한다. 11:00 알림에 "소식 조회 실패"가 계속 뜨면 이것부터 확인한다.
-- 요청은 식당당 하루 9번이다. 더 자주 돌리면 네이버에서 막힐 수 있다.
+- 네이버 페이지 구조가 바뀌면 `naver_place.parse_feeds()`를 고쳐야 한다. 12:00 알림에 "소식 조회 실패"가 계속 뜨면 이것부터 확인한다.
+- 요청은 식당당 하루 13번이다. 더 자주 돌리면 네이버에서 막힐 수 있다.
 
 ## 이력
 

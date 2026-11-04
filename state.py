@@ -16,7 +16,7 @@ class DayState:
     closed: dict[str, list[int]] = field(default_factory=dict)  # place_id → 올린 휴무 소식
     images: dict[str, list[str]] = field(default_factory=dict)  # place_id → 올린 메뉴 이미지 URL
     skipped: dict[str, list[int]] = field(default_factory=dict) # place_id → 같은 이미지라 건너뛴 소식
-    alerted: bool = False                                       # 11:00 미발견 알림 보냄
+    alerted: bool = False                                       # 12:00 미발견 알림 보냄
 
     def has_any(self, place_id: str) -> bool:
         return bool(self.menu.get(place_id) or self.closed.get(place_id))
